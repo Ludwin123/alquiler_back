@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { SessionService } from "../services/session.service";
 import { JWTPayload } from "../types/auth.types";
-import { forceLogoutUser } from "../utils/socket";
+import { forceLogoutUser,disconnectUserSessionsByTokens } from "../utils/socket";
 
 export class SessionController {
 	private sessionService: SessionService;
@@ -41,31 +41,57 @@ export class SessionController {
 		}
 	};
 
-	/**
-	 * Eliminar una sesion especifica
-	 * DELETE /api/sessions/:sessionId
-	 */
-	deleteSession = async (req: Request, res: Response): Promise<void> => {
-		try {
-			const { sessionId } = req.params;
-			const { userId } = req.authuser as JWTPayload;
+	
+	deleteSessions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    const { tokens } = req.body as { tokens?: string[] };
+    const authUser = req.authuser as JWTPayload | undefined;
 
-			await this.sessionService.deleteSession(sessionId, userId);
+    // Validar body
+    if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: "Debe enviar un arreglo 'tokens' con al menos un accessToken",
+      });
+      return;
+    }
 
-			res.status(200).json({
-				success: true,
-				message: 'Sesión eliminada exitosamente'
-			});
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    if (!authUser || authUser.userId !== userId) {
+      res.status(403).json({
+        success: false,
+        message: "No tienes permisos para modificar estas sesiones",
+      });
+      return;
+    }
 
-			res.status(400).json({
-				success: false,
-				message: 'Error al eliminar session',
-				error: errorMessage
-			});
-		}
-	}
+    // Lógica en el service: marcar esas sesiones como inactivas
+    const result = await this.sessionService.deactivateSessionsByTokens(
+      userId,
+      tokens
+    );
+
+disconnectUserSessionsByTokens(userId, tokens);
+
+    res.status(200).json({
+      success: true,
+      message: "Sesiones actualizadas exitosamente",
+      data: {
+        matchedCount: result.matchedCount,
+        modifiedCount: result.modifiedCount,
+      },
+    });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Error desconocido";
+
+    res.status(400).json({
+      success: false,
+      message: "Error al actualizar sesiones",
+      error: errorMessage,
+    });
+  }
+};
 	/**
 	  * Eliminar todas las sesiones excepto la actual
 	* DELETE /api/sessions/user/all-except-current

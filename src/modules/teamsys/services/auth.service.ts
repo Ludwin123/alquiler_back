@@ -122,6 +122,16 @@ return data; // ahora sí es GoogleUserProfile
             throw new Error('Invalid or expired access token');
         }
     }
+    // Dentro de AuthService
+
+verifyRefreshToken(token: string): AppJWTPayload {
+  try {
+    return jwt.verify(token, this.jwtRefreshSecret) as AppJWTPayload;
+  } catch (error) {
+    throw new Error('Invalid or expired refresh token');
+  }
+}
+
 
     async loginWithGoogle(code: string): Promise<TokenResponse> {
         const googleTokens = await this.exchangeCodeForTokens(code);

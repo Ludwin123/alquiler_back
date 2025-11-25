@@ -141,7 +141,30 @@ export class TwoFactorController {
       next(error);
     }
   };
+
+  desactivarTwoFactorSinClave = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { token } = req.body;
+
+      const { email, userId } = req.authuser as JWTPayload;
+      const user = await teamsysService.getById(userId);
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      await teamsysService.disableTwoFactor(user._id.toString());
+
+      res.status(200).json({
+        success: true,
+        message: 'Two-factor authentication disabled successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
   
 }
+
 
 export const twofactorController = new TwoFactorController(new TwoFactorService());

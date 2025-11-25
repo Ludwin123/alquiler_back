@@ -29,8 +29,6 @@ const router = Router();
 // === RUTAS DE AUTENTICACIÓN ===
 router.post('/auth/register', validateData, registerUser);
 router.post('/auth/login', loginUser);
-router.post("/google/callback", authController.googleCallback);
-router.get("/me", authMiddleware, authController.getCurrentUser);
 //h4
 router.post('/magic-link/request', magicLinkController.requestMagicLink);
 //router.get('/magic-link/verify', magicLinkController.verifyMagicLink);
@@ -42,7 +40,7 @@ router.post('/magic-link/verify', magicLinkController.verifyMagicLink);
  * sessions routes
  */
 router.get("/sessions/user/:userId", authMiddleware, sessionController.getSessionsByUserId);
-router.delete("/sessions/:sessionId/", authMiddleware, sessionController.deleteSession);
+router.patch("/sessions/:userId", authMiddleware, sessionController.deleteSessions);
 router.delete("/sessions/user/all-except-current", authMiddleware, sessionController.deleteAllSessionsExceptCurrent);
 
 // === RUTAS DE USUARIO ESPECÍFICAS ===
@@ -62,7 +60,6 @@ router.post('/usuario', validateData, create);
 router.put('/usuario/:id', update);
 /**eliminar un usr por id */
 router.delete('/usuario/:id', remove);
-router.post('/auth/login', loginUser);
 router.get('/exists', existsByEmail);
 
 /**
@@ -76,12 +73,9 @@ router.post('/usuario/ubicacion/:id',updateMapa);
 router.post("/google/callback", authController.googleCallback);
 router.get("/me", authMiddleware, authController.getCurrentUser);
 
-
 /**
  * sessions routes
  */
-router.get("/sessions/user/:userId", authMiddleware, sessionController.getSessionsByUserId);
-router.delete("/sessions/:sessionId/", authMiddleware, sessionController.deleteSession);
 //router.delete("/sessions/user/all-except-current", authMiddleware, sessionController.deleteAllSessionsExceptCurrent);
 
 router.post("/2fa/setup", authMiddleware, twofactorController.setupTwoFactor);
@@ -89,4 +83,5 @@ router.post("/2fa/verify", authMiddleware, twofactorController.verifyAndEnable);
 router.post("/2fa/disable", authMiddleware, twofactorController.disableTwoFactor);
 router.post("/2fa/verify-login", twofactorController.verifyLoginToken);
 
+router.put("/2fa/disable",authMiddleware, twofactorController.desactivarTwoFactorSinClave);
 export default router;
