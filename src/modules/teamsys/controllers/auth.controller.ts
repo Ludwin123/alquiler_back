@@ -37,8 +37,11 @@ export class AuthController {
       }
 
       const result  = await this.authService.loginWithGoogle(code as string)
-      if (result.user.terminosYCondiciones && result.user.correo!=null){
+      console.log(result)
+      if (result.user.correo!=null){
+
         const usuario=await teamsysService.verificarCorreo(result.user.correo)
+        console.log(usuario)
         if(usuario==null){
           res.status(500).json({
           success: false,
@@ -218,11 +221,21 @@ export class AuthController {
       return;
                   }
     }
-      } 
-      res.status(200).json({
-          success: true,
+
+    res.status(200).json({
+          success: false,
+          data: {accessToken: session.token,
+                refreshToken: session.refreshToken,
+                user:usuario},
+          message: 'usuario ya registrado',
+      });
+      return
+      }
+       
+      res.status(500).json({
+          success: false,
           data: result,
-          message: 'Usuario registrado correctamente!',
+          message: 'error back',
       });
       return;
     } catch (error) {
