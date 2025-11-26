@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document, model,InferSchemaType, HydratedDocument} from "mongoose";
 
 export interface IUser extends Document {
   nombre: string;
@@ -26,56 +26,84 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema(
   {
-    nombre: { type: String, required: true },
-    apellido: { type: String },
-    telefono: { type: String },
-    correo: { type: String, required: true, unique: true, trim: true },
+    nombre: { type: String,
+      required: [true, 'El nombre es requerido'], trim: true },
+    apellido: { type: String, trim: true },
+    telefono: { type: String, trim: true },
 
-    password: { type: String, select: false },
-    contraseña: { type: String, select: false },
+    correo: {
+      type: String,
+      required: [true, 'El correo electrónico es requerido'],
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
 
-    fotoPerfil: { type: String },
-    foto_perfil: { type: String },
+    password: {
+      type: String,
+      minlength: [8, 'La contraseña debe tener al menos 8 caracteres'],
+      // No obligatorio: usuarios de Google no la tienen
+    },
+
+    fotoPerfil: {
+      type: String, // o String si usas URL
+      required: [true, 'La foto de perfil es obligatoria para todos los usuarios'],
+    },
 
     ubicacion: {
       type: {
         type: String,
-        enum: ["Point"],
-        default: "Point",
+        enum: ['Point'],
+        default: 'Point',
       },
       coordinates: {
-        type: [Number],
-        default: undefined,
+        type: [Number], // [longitud, latitud]
+        required: [true, 'La ubicación es obligatoria para todos los usuarios'],
       },
     },
 
-    terminosYCondiciones: { type: Boolean, default: false },
-    authProvider: { type: String, default: "local" },
-    googleId: { type: String },
+    terminosYCondiciones: { type: Boolean },
 
-    rol: {
+    // === OAuth ===
+    authProvider: {
       type: String,
-      enum: ["cliente", "proveedor", "admin"],
-      default: "cliente",
+      enum: ['local', 'google'],
+      default: 'local',
+    },
+    googleId: {
+      type: String,
+      index: true,
+      sparse: true,
+      unique: true,
     },
 
-    roles: {
+    // === Rol ===
+    rol: {
       type: [String],
-      enum: ["cliente", "fixer", "admin"],
-      default: undefined,
+      default: ['requester'], // todos los nuevos usuarios serán requester
+      required: true,
     },
-
-    twoFactorSecret: { type: String },
-    twoFactorEnabled: { type: Boolean, default: false },
-    twoFactorBackupCodes: [{ type: String }],
-
-    fecha_creacion: { type: Date, default: Date.now },
+    twoFactorSecret: {
+      type: String,
+    },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorBackupCodes: {
+      type: [String],
+      default: [],
+    }
   },
   { timestamps: true }
 );
 
-userSchema.index({ ubicacion: "2dsphere" });
+// Índices
+userSchema.index({ ubicacion: '2dsphere' });
+userSchema.index({ correo: 1 }, { unique: true });
 
-export const User: Model<IUser> = mongoose.models.User ?? mongoose.model<IUser>("User", userSchema);
+export type User = InferSchemaType<typeof userSchema>;
+export type UserDocument = HydratedDocument<User>;
+export default model<User>('User', userSchema, 'users');

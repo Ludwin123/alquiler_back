@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import { ISession , IDeviceInfo,ILocation} from "../interfaces/session.interface";
-import Session from "../models/session.model";
+//import { ISession , IDeviceInfo,ILocation} from "../../../interfaces/session.interface";
+import Session from "../../../models/session.model";
 import { DeviceParser } from "../utils/deviceParser.util";
-import User from "../models/teamsys";
-import { SessionDocument } from "../models/session.model";
+import User from "@models/user.model";
+import { SessionDocument,ISession , IDeviceInfo,ILocation } from "../../../models/session.model";
 import { UpdateResult } from "mongodb";
 //import { Session } from "inspector";
 

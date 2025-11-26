@@ -9,8 +9,8 @@ type SignOptions = jwt.SignOptions;
 type JwtPayload = jwt.JwtPayload;
 type AppJWTPayload = JwtPayload & { userId: string; email: string };
 import mongoose from "mongoose";
-import { UserDocument } from "../models/teamsys";
-import { MagicLink } from '../models/magic-link.model'; 
+import { UserDocument } from "@models/user.model";
+import { MagicLink } from '@models/magiclink.model'; 
 import teamsysService1 from './teamsys.service';
 //import teamsysService from './teamsys.service';
 
@@ -256,7 +256,7 @@ async verifyMagicLinkToken(token: string): Promise<JWTPayload> {
 /**
  * Obtener usuario por email
  */
-async getUserByEmail(email: string): Promise<import("../models/teamsys").UserDocument | null> {
+async getUserByEmail(email: string): Promise<import("@models/user.model").UserDocument | null> {
   const Usuario = require('../models/teamsys').default;
   return await Usuario.findOne({ correo: email });
 }

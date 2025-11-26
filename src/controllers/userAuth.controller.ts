@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { BaseController } from "./base.controller";
-import { UserAuth } from "../models/userAuth.model";
+import  UserAuth  from "../models/userAuth.model";
 
 export class UserAuthController extends BaseController {
   constructor() {

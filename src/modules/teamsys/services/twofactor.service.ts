@@ -2,7 +2,7 @@ import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import { IUser } from '../interfaces/user.interface';
 import { TwoFactorSetupResponse } from '../types/twofactor.types';
-import { UserDocument } from '../models/teamsys';
+import { UserDocument } from '@models/user.model';
 export class TwoFactorService {
   private readonly APP_NAME = 'Servineo';
   private readonly TOTP_WINDOW = 2;

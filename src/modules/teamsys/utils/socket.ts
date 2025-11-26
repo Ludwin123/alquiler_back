@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import type http from "http";
-import  Session  from "../models/session.model"; // ajusta la ruta al modelo real
+import  Session  from "@models/session.model"; // ajusta la ruta al modelo real
 import mongoose from "mongoose";
 
 const userSockets = new Map<string, Set<string>>();

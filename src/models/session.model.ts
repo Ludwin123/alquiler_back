@@ -1,56 +1,151 @@
 import { Schema, model, Document, Types } from "mongoose";
+import mongoose, {  InferSchemaType, HydratedDocument} from "mongoose";
 
-export interface ISession extends Document {
-  userId: Types.ObjectId;
+const sessionSchema = new Schema<ISession>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'User id is required'],
+      index: true,
+    },
+    token: {
+      type: String,
+      required: [true, 'Token is required'],
+      unique: true,
+      index: true,
+    },
+    refreshToken: {
+      type: String,
+      sparse: true,
+      index: true,
+    },
+    deviceInfo: {
+      userAgent: {
+        type: String,
+        required: [true, 'user agent is required'],
+      },
+      ip: {
+        type: String,
+        required: [true, 'IP is required'],
+      },
+      browser: {
+        type: String,
+      },
+      os: {
+        type: String,
+      },
+      device: {
+        type: String,
+      },
+
+      // Tipo de dispositivo: 'mobile' | 'tablet' | 'desktop' | etc.
+      deviceType: {
+        type: String,
+      },
+      // Marca del dispositivo: Samsung, Apple, Xiaomi, etc.
+      deviceVendor: {
+        type: String,
+      },
+      // Modelo del dispositivo: SM-A146M, iPhone 12, etc.
+      deviceModel: {
+        type: String,
+      },
+      // Arquitectura del CPU: arm64, x86_64, etc.
+      cpuArch: {
+        type: String,
+      },
+      // Engine del navegador: WebKit, Blink, Gecko, etc.
+      engine: {
+        type: String,
+      },
+      // (Opcional) Datos crudos extra si quieres guardarlos
+      raw: {
+        type: Schema.Types.Mixed,
+      },
+    },
+    location: {
+      country: {
+        type: String,
+      },
+      city: {
+        type: String,
+      },
+      
+      lat: {
+        type: Number,
+      },
+      lng: {
+        type: Number,
+      },
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    lastActivity: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
+    expiresAt: {
+      type: Date,
+      required: [true, 'Expires at is required'],
+      index: true,
+    }
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+sessionSchema.index({ userId: 1, isActive: 1 });
+sessionSchema.index({ userId: 1, createdAt: -1 });
+sessionSchema.index({ token: 1, isActive: 1 });
+
+sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+export type Session = InferSchemaType<typeof sessionSchema>;
+export type SessionDocument = HydratedDocument<Session>;
+//export const Session: Model<ISession> = mongoose.model<ISession>('Session', sessionSchema);
+export default model<Session>('Session', sessionSchema, 'sessions');
+
+export interface IDeviceInfo {
+  userAgent: string;
+  ip: string;
+  browser?: string;
+  os?: string;
+  device?: string;
+
+  deviceType?: string;     
+  deviceVendor?: string;   
+  deviceModel?: string;    
+  cpuArch?: string;        
+  engine?: string;         
+  raw?: any;               
+}
+
+export interface ILocation {
+  country?: string;
+  city?: string;
+
+  lat?: number;
+  lng?: number;
+}
+
+export interface ISession {
+  _id: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
   token: string;
   refreshToken?: string;
-  deviceInfo: {
-    userAgent: string;
-    ip: string;
-    browser?: string;
-    os?: string;
-    device?: string;
-  };
-  location?: {
-    country?: string;
-    city?: string;
-  };
-  isActive?: boolean;
-  lastActivity?: Date;
+  deviceInfo: IDeviceInfo;
+  location?: ILocation;
+  isActive: boolean;
+  lastActivity: Date;
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const sessionSchema = new Schema<ISession>(
-  {
-    userId: { type: Schema.Types.ObjectId, ref: "users", required: true },
-    token: { type: String, required: true },
-    refreshToken: { type: String },
 
-    deviceInfo: {
-      userAgent: { type: String, required: true },
-      ip: { type: String, required: true },
-      browser: { type: String },
-      os: { type: String },
-      device: { type: String },
-    },
-
-    location: {
-      country: { type: String },
-      city: { type: String },
-    },
-
-    isActive: { type: Boolean, default: true },
-    lastActivity: { type: Date, default: Date.now },
-    expiresAt: { type: Date, required: true },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-// TTL automático (Mongo elimina cuando expira)
-sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-export const Session = model<ISession>("Session", sessionSchema);

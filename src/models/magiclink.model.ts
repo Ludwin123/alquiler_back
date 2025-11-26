@@ -1,26 +1,44 @@
-import { Schema, model, Document, Types } from "mongoose";
+import mongoose, { Schema, Model } from 'mongoose';
+//import { MagicLinkToken } from '../types/auth.types';
 
-export interface IMagicLink extends Document {
+export interface MagicLinkToken {
   token: string;
   email: string;
-  userId: Types.ObjectId;
+  userId: string;
   expiresAt: Date;
-  used?: boolean;
-  createdAt?: Date;
+  used: boolean;
+  createdAt: Date;
 }
 
-const magicLinkSchema = new Schema<IMagicLink>(
-  {
-    token: { type: String, required: true, unique: true },
-    email: { type: String, required: true },
-    userId: { type: Schema.Types.ObjectId, ref: "users", required: true },
-    expiresAt: { type: Date, required: true },
-    used: { type: Boolean, default: false },
+const magicLinkSchema = new Schema<MagicLinkToken>({
+  token: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true
   },
-  { timestamps: { createdAt: true, updatedAt: false } } // solo createdAt
-);
+  email: {
+    type: String,
+    required: true,
+    index: true
+  },
+  userId: {
+    type: String,
+    required: true
+  },
+  expiresAt: {
+    type: Date,
+    required: true,
+    index: { expireAfterSeconds: 0 } // Elimina automáticamente después de expirar
+  },
+  used: {
+    type: Boolean,
+    default: false
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
 
-// TTL automático: elimina enlaces expirados
-magicLinkSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-export const MagicLink = model<IMagicLink>("MagicLink", magicLinkSchema);
+export const MagicLink: Model<MagicLinkToken> = mongoose.model<MagicLinkToken>('MagicLink', magicLinkSchema);

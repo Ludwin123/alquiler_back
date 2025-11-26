@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { BaseController } from "./base.controller";
-import { Session } from "../models/session.model";
+import  Session  from "../models/session.model";
 
 export class SessionController extends BaseController {
   constructor() {

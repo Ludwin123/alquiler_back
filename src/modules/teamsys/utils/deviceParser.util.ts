@@ -1,4 +1,4 @@
-import { IDeviceInfo } from '../interfaces/session.interface';
+import { IDeviceInfo } from "@/models/session.model";
 
 export class DeviceParser {
   /**

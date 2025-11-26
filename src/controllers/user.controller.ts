@@ -6,7 +6,7 @@ REQUIERA ABORDAR, SINO TENDRA LAS FUNCIONALIDADES BASICAS DE 'CRUD' crear, edita
 
 import { Request, Response } from "express";
 import { BaseController } from "./base.controller";
-import { User } from "../models/user.model";
+import  User  from "../models/user.model";
 
 export class UserController extends BaseController {
   constructor() {

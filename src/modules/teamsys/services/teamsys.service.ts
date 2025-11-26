@@ -1,5 +1,6 @@
-import { UsuarioDocument } from '@/models/User';
-import Usuario, { UserDocument,UserAuth,UserAuthModel,UserAuthDocument} from '../models/teamsys';
+
+import UserAuthModel ,{UserAuth,UserAuthDocument} from '@/models/userAuth.model';
+import Usuario, { UserDocument} from '@/models/user.model'
 import { CrearUsuarioDto } from '../types/index';
 import { validarPassword } from '../utils/validaciones';
 import { Types } from 'mongoose';
