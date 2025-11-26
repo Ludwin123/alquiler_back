@@ -1,7 +1,7 @@
 // ============================================
 // IMPORTS BASE
 // ============================================
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
@@ -58,6 +58,7 @@ import trabajoRoutes from "./routes/trabajo.routes";
 import userRoutes from "./routes/user.routes";
 import userAuthRoutes from "./routes/userAuth.routes";
 import walletRoutes from "./routes/wallet.routes";
+import { initTeamsysSocketServer } from "./modules/teamsys/utils/socket";
 
 // ============================================
 // RUTAS DEL EQUIPO (OFERTAS / FIXERS / CATEGORIES / TEAMSYS)
@@ -65,7 +66,7 @@ import walletRoutes from "./routes/wallet.routes";
 import offersRouter from "./routes/offers";
 import fixerModule from "./modules/fixer";
 import categoriesModule from "./modules/categories";
-import teamsysModule from "./modules/teamsys";
+import teamsysModule from "./modules/teamsys/index";
 
 // ============================================
 // APP SETUP
@@ -177,11 +178,25 @@ app.use(globalErrorHandler);
 // ============================================
 // SERVIDOR
 // ============================================
+// puerto (usa nullish coalescing para soportar 0 correctamente)
 const PORT = Number(process.env.PORT ?? 5000);
 
-app.listen(PORT, () => {
-  const baseUrl = `http://localhost:${PORT}`;
+// host (útil para deploys)
+const HOST = process.env.HOST ?? '0.0.0.0';
+
+// arrancar servidor y guardar la instancia para pasar al socket server
+const server = app.listen(PORT, HOST, () => {
+  const publicURL = process.env.RENDER_EXTERNAL_URL;
+  const localURL = `http://localhost:${PORT}`;
+  const baseUrl = publicURL || localURL;
+
+  // usa logSystem si lo tienes (si no, reemplaza por console.log)
   logSystem("INFO", `Servidor corriendo en puerto ${PORT}`);
-  logSystem("INFO", `Modo: ${process.env.NODE_ENV}`);
+  logSystem("INFO", `Modo: ${process.env.NODE_ENV ?? 'development'}`);
   logSystem("INFO", `URL base: ${baseUrl}`);
+  logSystem("INFO", `Listo para recibir peticiones!`);
 });
+
+// inicializar servidor de sockets (p. ej. socket.io)
+initTeamsysSocketServer(server, corsOrigins);
+
