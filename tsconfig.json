@@ -1,35 +1,18 @@
 {
   "compilerOptions": {
-<<<<<<< HEAD
     /* === Salida y estructura === */
     "outDir": "./dist",
     "rootDir": "./src",
-=======
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020", "DOM"],
-    "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
->>>>>>> dev/los_borbotones-andy-back-felipe
-    "sourceMap": true,
-    "declaration": false,                 // No generar .d.ts para evitar ruido
-    "removeComments": true,
 
     /* === Módulos y compatibilidad === */
-    "target": "ES2022",                   // Mejor rendimiento y soporte moderno
-    "module": "NodeNext",                 // Recomendado para Node 18+ / 20+
-    "moduleResolution": "NodeNext",       // Compatible con imports ESM/CommonJS
-    "lib": ["ES2022", "DOM"],             // DOM opcional por si usas fetch u otras APIs
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "DOM"],
 
     /* === Comportamiento del compilador === */
     "strict": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
@@ -42,7 +25,6 @@
     /* === Alias === */
     "baseUrl": "./src",
     "paths": {
-<<<<<<< HEAD
       "@/*": ["*"],
       "@config/*": ["config/*"],
       "@modules/*": ["modules/*"],
@@ -52,21 +34,14 @@
       "@utils/*": ["utils/*"]
     },
 
-    /* === Nueva opción para desarrolladores === */
-    "allowImportingTsExtensions": true,   // Útil con moduleResolution NodeNext
-    "noUncheckedIndexedAccess": false,    // Puedes activarlo para aún más seguridad
-    "incremental": true                   // Compilación incremental más rápida
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
-}
-=======
-      "@/*": ["*"]
-    },
-    "noImplicitAny": false,
+    /* === Extras === */
+    "sourceMap": true,
+    "removeComments": true,
+    "allowImportingTsExtensions": true,
+    "incremental": true,
     "types": ["node"]
   },
+
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests", "**/*.test.ts", "**/*.spec.ts"]
 }
->>>>>>> dev/los_borbotones-andy-back-felipe

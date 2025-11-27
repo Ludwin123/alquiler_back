@@ -4,17 +4,13 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-<<<<<<< HEAD
 import connectDB from './config/database';
-import nombreGrupoEjemploRouter from './modules/nombre_grupo_ejemplo';
-import availabilityRoutes from "./modules/DevCode/routes/availability.routes";
 // Cargar variables de entorno
-=======
 
 // ============================================
 // 🧱 Conexión a la base de datos
 // ============================================
-import connectDB from './config/database';
+
 import mongoose from 'mongoose';
 
 // ============================================
@@ -30,7 +26,6 @@ import busquedaAvanzadaRouter from './modules/borbotones/routes/busquedaAvanzada
 // ============================================
 // 🔹 Cargar variables de entorno
 // ============================================
->>>>>>> dev/los_borbotones-andy-back-felipe
 dotenv.config();
 
 // ============================================
@@ -102,17 +97,13 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // ============================================
-<<<<<<< HEAD
 // MONTAR MÓDULOS/GRUPOS AQUÍ
 // ============================================
 // Montar tus módulos aquí:
-app.use('/api/nombre_grupo_ejemplo', nombreGrupoEjemploRouter);
-app.use('/api/devcode', availabilityRoutes)
+
 // ============================================
 // Manejo de errores 404
-=======
 // ⚠️ Middleware para rutas no encontradas
->>>>>>> dev/los_borbotones-andy-back-felipe
 // ============================================
 app.use((req: Request, res: Response) => {
   res.status(404).json({
