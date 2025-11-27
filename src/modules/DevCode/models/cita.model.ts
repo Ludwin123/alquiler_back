@@ -1,9 +1,9 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import mongoose, { Schema, Model, Document, Types } from "mongoose";
 
-export interface ICita extends Document {
+export interface ICita {
   proveedorId: Types.ObjectId;
   servicioId: Types.ObjectId;
-  clienteId: Types.ObjectId; // 👈 agregar este campo
+  clienteId: Types.ObjectId;
   fecha: string;
   horario: {
     inicio: string;
@@ -15,16 +15,18 @@ export interface ICita extends Document {
     direccion?: string;
     notas?: string;
   };
-  estado: 'pendiente' | 'confirmada' | 'cancelada';
-  createdAt: Date;
-  updatedAt: Date;
+  estado: "pendiente" | "confirmada" | "cancelada";
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const CitaSchema = new Schema<ICita>(
+export type CitaDocument = Document & ICita;
+
+const CitaSchema = new Schema<CitaDocument>(
   {
-    proveedorId: { type: Schema.Types.ObjectId, ref: 'Proveedor', required: true },
-    servicioId: { type: Schema.Types.ObjectId, ref: 'Servicio', required: true }, // ✅ agregado ref
-    clienteId: { type: Schema.Types.ObjectId, ref: 'Cliente', required: true },
+    proveedorId: { type: Schema.Types.ObjectId, ref: "Fixer", required: true },
+    servicioId: { type: Schema.Types.ObjectId, ref: "Servicio", required: true },
+    clienteId: { type: Schema.Types.ObjectId, ref: "Cliente", required: true },
     fecha: { type: String, required: true },
     horario: {
       inicio: { type: String, required: true },
@@ -38,14 +40,19 @@ const CitaSchema = new Schema<ICita>(
     },
     estado: {
       type: String,
-      enum: ['pendiente', 'confirmada', 'cancelada'],
-      default: 'pendiente',
+      enum: ["pendiente", "confirmada", "cancelada"],
+      default: "pendiente",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: "citas", // <-- usa la colección REAL
+  }
 );
 
-// Índice para evitar solapamiento por proveedor y fecha
-CitaSchema.index({ proveedorId: 1, fecha: 1 });
+// Reusar siempre el mismo modelo
+const CitaModel: Model<CitaDocument> =
+  (mongoose.models.Cita as Model<CitaDocument>) ||
+  mongoose.model<CitaDocument>("Cita", CitaSchema, "citas");
 
-export const Cita = model<ICita>('Cita', CitaSchema);
+export default CitaModel;

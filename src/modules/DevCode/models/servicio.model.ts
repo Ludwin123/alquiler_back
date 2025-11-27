@@ -1,21 +1,31 @@
-import { Schema, model, Types } from 'mongoose';
+import mongoose, { Schema, model, Types } from "mongoose";
 
 export interface IServicio {
   nombre: string;
   descripcion: string;
-  duracion: number; // en minutos
-  precio: number;
-  rating: number;
-  proveedorId: Types.ObjectId; // <-- usar ObjectId
+  duracion?: number;
+  precio?: number;
+  rating?: number;
+  proveedorId?: Types.ObjectId;
 }
 
-const ServicioSchema = new Schema<IServicio>({
-  nombre: { type: String, required: true },
-  descripcion: { type: String },
-  duracion: { type: Number, required: true },
-  precio: { type: Number, required: true },
-  rating: { type: Number, required: true },
-  proveedorId: { type: Schema.Types.ObjectId, ref: 'Proveedor', required: true }
-});
+const ServicioSchema = new Schema<IServicio>(
+  {
+    nombre: { type: String, required: true },
+    descripcion: { type: String },
+    duracion: { type: Number },
+    precio: { type: Number },
+    rating: { type: Number },
+    proveedorId: { type: Schema.Types.ObjectId, ref: "Proveedor" },
+  },
+  {
+    collection: "servicios", // <-- usa la colección existente
+  }
+);
 
-export const Servicio = model<IServicio>('Servicio', ServicioSchema);
+// Siempre usar el mismo modelo y la misma colección
+const ServicioModel =
+  mongoose.models.Servicio ||
+  model<IServicio>("Servicio", ServicioSchema, "servicios");
+
+export default ServicioModel;
