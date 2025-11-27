@@ -27,28 +27,28 @@ connectDB().catch((err) => {
 // ============================================
 // MIDDLEWARES GLOBALES
 // ============================================
-/*import { requestLogger } from "./modules/notification_Gmail/middlewares/request.middleware";
+import { requestLogger } from "./modules/notification_Gmail/middlewares/request.middleware";
 import { notFoundHandler } from "./modules/notification_Gmail/middlewares/notFound.middleware";
-import { globalErrorHandler } from "./modules/notification_Gmail/middlewares/error.middleware";*/
+import { globalErrorHandler } from "./modules/notification_Gmail/middlewares/error.middleware";
 
 // ============================================
 // IMPORT UTILIDADES INTERNAS (LOCAL LOGGER)
 // ============================================
-/*import { logSystem } from "./modules/notification_Gmail/utils/loggerExtended";
-import { generateCode } from "./modules/notification_Gmail/utils/helpers";*/
+import { logSystem } from "./modules/notification_Gmail/utils/loggerExtended";
+import { generateCode } from "./modules/notification_Gmail/utils/helpers";
 
 // ============================================
 // RUTAS: NOTIFICACIONES
 // ============================================
-/*import gmailRoutes from "./modules/notification_Gmail/routes/notification.routes";
+import gmailRoutes from "./modules/notification_Gmail/routes/notification.routes";
 import gmailCentralRouter from "./modules/notification_Gmail/routes/central.router";
 import whatsappRoutes from "./modules/notification_WhatsApp/routes/notification.routes";
-import whatsappCentralRouter from "./modules/notification_WhatsApp/routes/central.router";*/
+import whatsappCentralRouter from "./modules/notification_WhatsApp/routes/central.router";
 
 // ============================================
 // RUTAS GENERALES PARA EL PROYECTO - BACKEND
 // ============================================
-/*import citaRoutes from "./routes/cita.routes";
+import citaRoutes from "./routes/cita.routes";
 import ciudadRoutes from "./routes/ciudad.routes";
 import clienteRoutes from "./routes/cliente.routes";
 import especialidadRoutes from "./routes/especialidad.routes";
@@ -64,7 +64,7 @@ import sessionRoutes from "./routes/session.routes";
 import trabajoRoutes from "./routes/trabajo.routes";
 import userRoutes from "./routes/user.routes";
 import userAuthRoutes from "./routes/userAuth.routes";
-import walletRoutes from "./routes/wallet.routes";*/
+import walletRoutes from "./routes/wallet.routes";
 import routeswallet from "./modules/bitCrew/routes";
 
 
@@ -108,16 +108,16 @@ app.get("/api/health", (req: Request, res: Response) => {
 // ============================================
 // MÓDULOS ACTIVOS
 // ============================================
-/*
+
 // --- Gmail Notifications ---
 app.use("/gmail-notifications", gmailRoutes);
 app.use("/api/gmail-notifications", gmailCentralRouter);
 
 // --- WhatsApp Notifications ---
 app.use("/whatsapp-notifications", whatsappRoutes);
-app.use("/api/whatsapp-notifications", whatsappCentralRouter);*/
+app.use("/api/whatsapp-notifications", whatsappCentralRouter);
 app.use('/api/bitCrew', routeswallet);
-/*
+
 // --- Rutas Generales del Proyecto ---
 app.use("/api/cita", citaRoutes);
 app.use("/api/ciudad", ciudadRoutes);
@@ -146,7 +146,7 @@ app.use("/api/auth", userAuthRoutes);
 // MANEJO DE ERRORES
 // ============================================
 app.use(notFoundHandler);
-app.use(globalErrorHandler);*/
+app.use(globalErrorHandler);
 
 // ============================================
 // INICIO DEL SERVIDOR
@@ -184,12 +184,12 @@ app.listen(PORT, () => {
     "   - /api/auth",
     "   - /api/wallet",
   ];
-/*
+
   logSystem("INFO", `🚀 Servidor corriendo en puerto ${PORT}`);
   logSystem("INFO", `🔧 Modo: ${process.env.NODE_ENV}`);
   logSystem("INFO", `🌐 URL base: ${baseUrl}`);
   logSystem("INFO", "📦 Módulos activos:\n" + modules.join("\n"));
-  logSystem("INFO", "✅ Listo para recibir peticiones!");*/
+  logSystem("INFO", "✅ Listo para recibir peticiones!");
 });
 
 
