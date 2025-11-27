@@ -539,3 +539,8 @@
 {"ts":"2025-11-06T06:23:40.239Z","level":"INFO","message":"request:finish","id":"59aa7ae8-b140-49a1-a2b3-25e2f7dc9e67","status":304,"method":"GET","url":"/api/devcode/servicios","duration":336}
 {"ts":"2025-11-06T06:23:40.243Z","level":"INFO","message":"request:start","id":"12de03e2-344c-44ce-b22e-ceed148dc2a4","method":"GET","url":"/api/devcode/servicios","ip":"::1"}
 {"ts":"2025-11-06T06:23:40.587Z","level":"INFO","message":"request:finish","id":"12de03e2-344c-44ce-b22e-ceed148dc2a4","status":304,"method":"GET","url":"/api/devcode/servicios","duration":344}
+{"ts":"2025-11-27T15:01:55.317Z","level":"INFO","message":"🚀 Servidor corriendo en puerto 5000"}
+{"ts":"2025-11-27T15:01:55.321Z","level":"INFO","message":"🔧 Modo: development"}
+{"ts":"2025-11-27T15:01:55.323Z","level":"INFO","message":"🌐 URL base: http://localhost:5000"}
+{"ts":"2025-11-27T15:01:55.323Z","level":"INFO","message":"📦 Módulos activos:\n📩 Gmail Notifications:\n   - /gmail-notifications\n   - /api/gmail-notifications\n\n💬 WhatsApp Notifications:\n   - /whatsapp-notifications\n   - /api/whatsapp-notifications\n\n🗂️ Rutas Generales del Proyecto:\n   - /api/cita\n   - /api/ciudad\n   - /api/cliente\n   - /api/especialidad\n   - /api/fixer\n   - /api/historial\n   - /api/horario-disponible\n   - /api/magiclink\n   - /api/notificacion-gmail\n   - /api/notificacion-whatsapp\n   - /api/provincia\n   - /api/servicio\n   - /api/session\n   - /api/trabajo\n   - /api/user\n   - /api/auth\n   - /api/wallet"}
+{"ts":"2025-11-27T15:01:55.326Z","level":"INFO","message":"✅ Listo para recibir peticiones!"}

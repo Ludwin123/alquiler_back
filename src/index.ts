@@ -27,23 +27,23 @@ connectDB().catch((err) => {
 // ============================================
 // MIDDLEWARES GLOBALES
 // ============================================
-/*import { requestLogger } from "./modules/notification_Gmail/middlewares/request.middleware";
+import { requestLogger } from "./modules/notification_Gmail/middlewares/request.middleware";
 import { notFoundHandler } from "./modules/notification_Gmail/middlewares/notFound.middleware";
-import { globalErrorHandler } from "./modules/notification_Gmail/middlewares/error.middleware";*/
+import { globalErrorHandler } from "./modules/notification_Gmail/middlewares/error.middleware";
 
 // ============================================
 // IMPORT UTILIDADES INTERNAS (LOCAL LOGGER)
 // ============================================
-/*import { logSystem } from "./modules/notification_Gmail/utils/loggerExtended";
-import { generateCode } from "./modules/notification_Gmail/utils/helpers";*/
+import { logSystem } from "./modules/notification_Gmail/utils/loggerExtended";
+import { generateCode } from "./modules/notification_Gmail/utils/helpers";
 
 // ============================================
 // RUTAS: NOTIFICACIONES
 // ============================================
-/*import gmailRoutes from "./modules/notification_Gmail/routes/notification.routes";
+import gmailRoutes from "./modules/notification_Gmail/routes/notification.routes";
 import gmailCentralRouter from "./modules/notification_Gmail/routes/central.router";
 import whatsappRoutes from "./modules/notification_WhatsApp/routes/notification.routes";
-import whatsappCentralRouter from "./modules/notification_WhatsApp/routes/central.router";*/
+import whatsappCentralRouter from "./modules/notification_WhatsApp/routes/central.router";
 
 // ============================================
 // RUTAS GENERALES PARA EL PROYECTO - BACKEND
@@ -109,14 +109,14 @@ app.get("/api/health", (req: Request, res: Response) => {
 // ============================================
 // MÓDULOS ACTIVOS
 // ============================================
-/*
+
 // --- Gmail Notifications ---
 app.use("/gmail-notifications", gmailRoutes);
 app.use("/api/gmail-notifications", gmailCentralRouter);
 
 // --- WhatsApp Notifications ---
 app.use("/whatsapp-notifications", whatsappRoutes);
-app.use("/api/whatsapp-notifications", whatsappCentralRouter);*/
+app.use("/api/whatsapp-notifications", whatsappCentralRouter);
 app.use('/api/bitCrew', routeswallet);
 app.use('/api/devcode', routesDevcode);
 /*
