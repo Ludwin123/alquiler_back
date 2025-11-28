@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import type { File as MulterFile } from "multer";
 import service from "../services/fixers.service";
 import type {
   FixerSkillInput,
@@ -244,8 +245,10 @@ const buildCertificationPayload = (
   return payload;
 };
 
+type RequestWithFile = Request & { file?: MulterFile };
+
 const buildCertificationImagePayload = (
-  file: Express.Multer.File | undefined,
+  file: MulterFile | undefined,
   required: boolean
 ): CertificationImagePayload | undefined => {
   if (!file) {
@@ -532,7 +535,8 @@ export const deleteJobPosition = async (req: Request, res: Response) => {
 
 export const createCertification = async (req: Request, res: Response) => {
   try {
-    const image = buildCertificationImagePayload(req.file as Express.Multer.File | undefined, true)!;
+    const file = (req as RequestWithFile).file;
+    const image = buildCertificationImagePayload(file, true)!;
     const payload = buildCertificationPayload(req.body, image);
     const cert = await service.addCertification(req.params.id, payload as CertificationPayload & {
       image: CertificationImagePayload;
@@ -548,7 +552,8 @@ export const createCertification = async (req: Request, res: Response) => {
 
 export const updateCertification = async (req: Request, res: Response) => {
   try {
-    const image = buildCertificationImagePayload(req.file as Express.Multer.File | undefined, false);
+    const file = (req as RequestWithFile).file;
+    const image = buildCertificationImagePayload(file, false);
     const payload = buildCertificationPayload(req.body, image);
     const cert = await service.updateCertification(req.params.id, req.params.certificationId, payload);
     if (!cert) {
