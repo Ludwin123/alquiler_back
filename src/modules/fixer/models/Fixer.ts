@@ -1,4 +1,4 @@
-import { Schema, model, models, Document } from "mongoose";
+import { Schema, model, models, Document, Types } from "mongoose";
 
 export type PaymentMethod = "card" | "qr" | "cash";
 
@@ -16,6 +16,44 @@ export type PaymentAccount = {
 export type FixerSkill = {
   categoryId: string;
   customDescription?: string;
+};
+
+export type JobPosition = {
+  _id: Types.ObjectId;
+  positionName: string;
+  journeyType: string;
+  organization?: string;
+  isCurrent: boolean;
+  startDate: Date;
+  endDate?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+export type CertificationImage = {
+  data: string;
+  mimeType: string;
+  size: number;
+  originalName?: string;
+};
+
+export type Certification = {
+  _id: Types.ObjectId;
+  name: string;
+  issuer: string;
+  issueDate: Date;
+  expirationDate?: Date;
+  credentialId?: string;
+  credentialUrl?: string;
+  image: CertificationImage;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+export type WorkExperience = {
+  jobPositions: JobPosition[];
+  certifications: Certification[];
+  updatedAt?: Date;
 };
 
 const LocationSchema = new Schema<Location>(
@@ -43,6 +81,50 @@ const FixerSkillSchema = new Schema<FixerSkill>(
   { _id: false }
 );
 
+const JobPositionSchema = new Schema<JobPosition>(
+  {
+    positionName: { type: String, required: true, trim: true, maxlength: 120 },
+    journeyType: { type: String, required: true, trim: true, maxlength: 80 },
+    organization: { type: String, trim: true, maxlength: 160 },
+    isCurrent: { type: Boolean, default: false },
+    startDate: { type: Date, required: true },
+    endDate: { type: Date },
+  },
+  { timestamps: true }
+);
+
+const CertificationImageSchema = new Schema<CertificationImage>(
+  {
+    data: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    size: { type: Number, required: true },
+    originalName: { type: String },
+  },
+  { _id: false }
+);
+
+const CertificationSchema = new Schema<Certification>(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 160 },
+    issuer: { type: String, required: true, trim: true, maxlength: 160 },
+    issueDate: { type: Date, required: true },
+    expirationDate: { type: Date },
+    credentialId: { type: String, trim: true, maxlength: 120 },
+    credentialUrl: { type: String, trim: true, maxlength: 512 },
+    image: { type: CertificationImageSchema, required: true },
+  },
+  { timestamps: true }
+);
+
+const WorkExperienceSchema = new Schema<WorkExperience>(
+  {
+    jobPositions: { type: [JobPositionSchema], default: [] },
+    certifications: { type: [CertificationSchema], default: [] },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 export interface FixerDoc extends Document {
   fixerId: string;
   userId: string;
@@ -62,6 +144,7 @@ export interface FixerDoc extends Document {
   ratingAvg: number;
   ratingCount: number;
   memberSince?: Date;
+  workExperience?: WorkExperience;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -94,6 +177,14 @@ const FixerSchema = new Schema<FixerDoc>(
     ratingAvg: { type: Number, default: 0, min: 0, max: 5 },
     ratingCount: { type: Number, default: 0, min: 0 },
     memberSince: { type: Date },
+    workExperience: {
+      type: WorkExperienceSchema,
+      default: () => ({
+        jobPositions: [],
+        certifications: [],
+        updatedAt: new Date(),
+      }),
+    },
   },
   {
     timestamps: true,

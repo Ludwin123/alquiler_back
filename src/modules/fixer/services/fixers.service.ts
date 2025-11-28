@@ -6,6 +6,10 @@ import {
   PaymentMethod,
   Location,
   FixerSkill,
+  WorkExperience,
+  JobPosition,
+  Certification,
+  CertificationImage,
 } from "../models/Fixer";
 import { UserModel } from "../../../models/User";
 import type { UserDoc } from "../../../models/User";
@@ -50,6 +54,69 @@ export type FixerRecord = {
   memberSince?: string;
   categoriesInfo?: Category[];
   skillsInfo?: FixerSkillView[];
+  workExperience?: WorkExperienceRecord;
+};
+
+export type JobPositionRecord = {
+  id: string;
+  positionName: string;
+  journeyType: string;
+  organization?: string;
+  isCurrent: boolean;
+  startDate: string;
+  endDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type CertificationRecord = {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate: string;
+  expirationDate?: string;
+  credentialId?: string;
+  credentialUrl?: string;
+  imageUrl: string;
+  imageMeta: {
+    mimeType: string;
+    size: number;
+    originalName?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type WorkExperienceRecord = {
+  jobPositions: JobPositionRecord[];
+  certifications: CertificationRecord[];
+  updatedAt?: string;
+};
+
+export type JobPositionPayload = {
+  positionName: string;
+  journeyType: string;
+  organization?: string;
+  isCurrent: boolean;
+  startDate: Date;
+  endDate?: Date;
+};
+
+export type CertificationImagePayload = {
+  data: string;
+  mimeType: string;
+  size: number;
+  originalName?: string;
+};
+
+export type CertificationPayload = {
+  name: string;
+  issuer: string;
+  issueDate: Date;
+  expirationDate?: Date;
+  credentialId?: string;
+  credentialUrl?: string;
+  image?: CertificationImagePayload;
 };
 
 export type FixerWithCategories = FixerRecord & {
@@ -85,6 +152,100 @@ export type CreateFixerDTO = {
 };
 
 export type UpdateFixerDTO = Partial<CreateFixerDTO>;
+
+const dataUrlFromImage = (image?: CertificationImage | null): string | null => {
+  if (!image?.data || !image?.mimeType) return null;
+  return `data:${image.mimeType};base64,${image.data}`;
+};
+
+const idEquals = (value: any, target: Types.ObjectId) => {
+  if (!value) return false;
+  if (typeof value.equals === "function") {
+    return value.equals(target);
+  }
+  return String(value) === target.toHexString();
+};
+
+const mapJobPositionRecord = (job?: JobPosition | null): JobPositionRecord | null => {
+  if (!job?._id) return null;
+  const start = job.startDate instanceof Date ? job.startDate : new Date(job.startDate);
+  const end =
+    job.endDate instanceof Date
+      ? job.endDate
+      : job.endDate
+        ? new Date(job.endDate)
+        : undefined;
+
+  return {
+    id: String(job._id),
+    positionName: job.positionName,
+    journeyType: job.journeyType,
+    organization: job.organization || undefined,
+    isCurrent: Boolean(job.isCurrent),
+    startDate: start.toISOString(),
+    endDate: end ? end.toISOString() : undefined,
+    createdAt: job.createdAt ? job.createdAt.toISOString?.() ?? new Date(job.createdAt).toISOString() : undefined,
+    updatedAt: job.updatedAt ? job.updatedAt.toISOString?.() ?? new Date(job.updatedAt).toISOString() : undefined,
+  };
+};
+
+const mapCertificationRecord = (cert?: Certification | null): CertificationRecord | null => {
+  if (!cert?._id || !cert.image) return null;
+  const issue = cert.issueDate instanceof Date ? cert.issueDate : new Date(cert.issueDate);
+  const expiration =
+    cert.expirationDate instanceof Date
+      ? cert.expirationDate
+      : cert.expirationDate
+        ? new Date(cert.expirationDate)
+        : undefined;
+
+  const createdAt = cert.createdAt
+    ? cert.createdAt.toISOString?.() ?? new Date(cert.createdAt).toISOString()
+    : undefined;
+  const updatedAt = cert.updatedAt
+    ? cert.updatedAt.toISOString?.() ?? new Date(cert.updatedAt).toISOString()
+    : undefined;
+
+  return {
+    id: String(cert._id),
+    name: cert.name,
+    issuer: cert.issuer,
+    issueDate: issue.toISOString(),
+    expirationDate: expiration ? expiration.toISOString() : undefined,
+    credentialId: cert.credentialId || undefined,
+    credentialUrl: cert.credentialUrl || undefined,
+    imageUrl: dataUrlFromImage(cert.image) ?? "",
+    imageMeta: {
+      mimeType: cert.image.mimeType,
+      size: cert.image.size,
+      originalName: cert.image.originalName || undefined,
+    },
+    createdAt,
+    updatedAt,
+  };
+};
+
+const buildWorkExperienceRecord = (work?: WorkExperience | null): WorkExperienceRecord => {
+  const jobPositions = Array.isArray(work?.jobPositions)
+    ? work!.jobPositions
+        .map((job) => mapJobPositionRecord(job))
+        .filter((item): item is JobPositionRecord => Boolean(item))
+    : [];
+
+  const certifications = Array.isArray(work?.certifications)
+    ? work!.certifications
+        .map((cert) => mapCertificationRecord(cert))
+        .filter((item): item is CertificationRecord => Boolean(item))
+    : [];
+
+  return {
+    jobPositions,
+    certifications,
+    updatedAt: work?.updatedAt
+      ? work.updatedAt.toISOString?.() ?? new Date(work.updatedAt).toISOString()
+      : undefined,
+  };
+};
 
 function toRecord(doc: FixerDoc | null): FixerRecord | null {
   if (!doc) return null;
@@ -136,6 +297,7 @@ function toRecord(doc: FixerDoc | null): FixerRecord | null {
     ratingAvg: plain.ratingAvg,
     ratingCount: plain.ratingCount,
     memberSince: plain.memberSince ? new Date(plain.memberSince).toISOString() : undefined,
+    workExperience: buildWorkExperienceRecord((plain as any).workExperience),
   };
 }
 
@@ -145,6 +307,13 @@ function buildIdQuery(id: string): FilterQuery<FixerDoc> {
     or.push({ _id: new Types.ObjectId(id) });
   }
   return or.length === 1 ? or[0] : { $or: or };
+}
+
+function mergeFixerFilter(base: FilterQuery<FixerDoc>, extra: FilterQuery<FixerDoc>): FilterQuery<FixerDoc> {
+  if ((base as any).$or) {
+    return { $and: [base, extra] };
+  }
+  return { ...base, ...extra };
 }
 
 function buildFullName(user: Partial<UserDoc> & { nombre?: string; apellido?: string }) {
@@ -685,6 +854,163 @@ class FixersService {
       .sort((a, b) => a.category.name.localeCompare(b.category.name));
 
     return result;
+  }
+
+  async getWorkExperience(id: string) {
+    const doc = await FixerModel.findOne(buildIdQuery(id), { workExperience: 1 });
+    if (!doc) return null;
+    return buildWorkExperienceRecord(doc.workExperience);
+  }
+
+  async addJobPosition(id: string, payload: JobPositionPayload) {
+    const jobId = new Types.ObjectId();
+    const job: JobPosition = {
+      _id: jobId,
+      positionName: payload.positionName,
+      journeyType: payload.journeyType,
+      organization: payload.organization,
+      isCurrent: payload.isCurrent,
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+    };
+
+    const doc = await FixerModel.findOneAndUpdate(
+      buildIdQuery(id),
+      {
+        $push: { "workExperience.jobPositions": job },
+        $set: { "workExperience.updatedAt": new Date() },
+      },
+      { new: true, projection: { workExperience: 1 }, runValidators: true }
+    );
+    if (!doc) return null;
+    const jobList = (doc.workExperience?.jobPositions ?? []) as JobPosition[];
+    const inserted = jobList.find((item) => idEquals(item._id, jobId)) ?? job;
+    return mapJobPositionRecord(inserted) ?? null;
+  }
+
+  async updateJobPosition(id: string, jobId: string, payload: JobPositionPayload) {
+    if (!Types.ObjectId.isValid(jobId)) return null;
+    const objectId = new Types.ObjectId(jobId);
+    const filter = mergeFixerFilter(buildIdQuery(id), {
+      "workExperience.jobPositions._id": objectId,
+    });
+
+    const updateFields: Record<string, any> = {
+      "workExperience.jobPositions.$.positionName": payload.positionName,
+      "workExperience.jobPositions.$.journeyType": payload.journeyType,
+      "workExperience.jobPositions.$.organization": payload.organization ?? null,
+      "workExperience.jobPositions.$.isCurrent": payload.isCurrent,
+      "workExperience.jobPositions.$.startDate": payload.startDate,
+      "workExperience.jobPositions.$.endDate": payload.endDate ?? null,
+      "workExperience.jobPositions.$.updatedAt": new Date(),
+      "workExperience.updatedAt": new Date(),
+    };
+
+    const doc = await FixerModel.findOneAndUpdate(
+      filter,
+      { $set: updateFields },
+      { new: true, projection: { workExperience: 1 }, runValidators: true }
+    );
+    if (!doc) return null;
+    const jobList = (doc.workExperience?.jobPositions ?? []) as JobPosition[];
+    const job = jobList.find((item) => idEquals(item._id, objectId));
+    return job ? mapJobPositionRecord(job) : null;
+  }
+
+  async deleteJobPosition(id: string, jobId: string) {
+    if (!Types.ObjectId.isValid(jobId)) return false;
+    const objectId = new Types.ObjectId(jobId);
+    const filter = mergeFixerFilter(buildIdQuery(id), {
+      "workExperience.jobPositions._id": objectId,
+    });
+
+    const result = await FixerModel.updateOne(filter, {
+      $pull: { "workExperience.jobPositions": { _id: objectId } },
+      $set: { "workExperience.updatedAt": new Date() },
+    });
+
+    return result.modifiedCount > 0;
+  }
+
+  async addCertification(id: string, payload: CertificationPayload & { image: CertificationImagePayload }) {
+    const certId = new Types.ObjectId();
+    const certification: Certification = {
+      _id: certId,
+      name: payload.name,
+      issuer: payload.issuer,
+      issueDate: payload.issueDate,
+      expirationDate: payload.expirationDate,
+      credentialId: payload.credentialId,
+      credentialUrl: payload.credentialUrl,
+      image: payload.image,
+    };
+
+    const doc = await FixerModel.findOneAndUpdate(
+      buildIdQuery(id),
+      {
+        $push: { "workExperience.certifications": certification },
+        $set: { "workExperience.updatedAt": new Date() },
+      },
+      { new: true, projection: { workExperience: 1 }, runValidators: true }
+    );
+
+    if (!doc) return null;
+    const certList = (doc.workExperience?.certifications ?? []) as Certification[];
+    const inserted = certList.find((item) => idEquals(item._id, certId)) ?? certification;
+    return mapCertificationRecord(inserted) ?? null;
+  }
+
+  async updateCertification(
+    id: string,
+    certificationId: string,
+    payload: CertificationPayload
+  ) {
+    if (!Types.ObjectId.isValid(certificationId)) return null;
+    const objectId = new Types.ObjectId(certificationId);
+    const filter = mergeFixerFilter(buildIdQuery(id), {
+      "workExperience.certifications._id": objectId,
+    });
+
+    const updateFields: Record<string, any> = {
+      "workExperience.certifications.$.name": payload.name,
+      "workExperience.certifications.$.issuer": payload.issuer,
+      "workExperience.certifications.$.issueDate": payload.issueDate,
+      "workExperience.certifications.$.expirationDate": payload.expirationDate ?? null,
+      "workExperience.certifications.$.credentialId": payload.credentialId ?? null,
+      "workExperience.certifications.$.credentialUrl": payload.credentialUrl ?? null,
+      "workExperience.certifications.$.updatedAt": new Date(),
+      "workExperience.updatedAt": new Date(),
+    };
+
+    if (payload.image) {
+      updateFields["workExperience.certifications.$.image"] = payload.image;
+    }
+
+    const doc = await FixerModel.findOneAndUpdate(
+      filter,
+      { $set: updateFields },
+      { new: true, projection: { workExperience: 1 }, runValidators: true }
+    );
+
+    if (!doc) return null;
+    const certList = (doc.workExperience?.certifications ?? []) as Certification[];
+    const cert = certList.find((item) => idEquals(item._id, objectId));
+    return cert ? mapCertificationRecord(cert) : null;
+  }
+
+  async deleteCertification(id: string, certificationId: string) {
+    if (!Types.ObjectId.isValid(certificationId)) return false;
+    const objectId = new Types.ObjectId(certificationId);
+    const filter = mergeFixerFilter(buildIdQuery(id), {
+      "workExperience.certifications._id": objectId,
+    });
+
+    const result = await FixerModel.updateOne(filter, {
+      $pull: { "workExperience.certifications": { _id: objectId } },
+      $set: { "workExperience.updatedAt": new Date() },
+    });
+
+    return result.modifiedCount > 0;
   }
 
   async updateLocation(id: string, location: Location) {
