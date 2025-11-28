@@ -18,6 +18,8 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "baseUrl": "./src",
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "types": ["node", "express", "multer"],
     "paths": {
       "@/*": ["*"],
       "@config/*": ["config/*"],
