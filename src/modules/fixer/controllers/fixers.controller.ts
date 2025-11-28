@@ -1,7 +1,13 @@
 import { Request, Response } from "express";
 import service from "../services/fixers.service";
-import type { FixerSkillInput } from "../services/fixers.service";
+import type {
+  FixerSkillInput,
+  JobPositionPayload,
+  CertificationPayload,
+  CertificationImagePayload,
+} from "../services/fixers.service";
 import type { PaymentAccount, PaymentMethod } from "../models/Fixer";
+import { ALLOWED_CERTIFICATION_MIME_TYPES } from "../middlewares/certificationUpload";
 
 const ALLOWED_PAYMENTS: PaymentMethod[] = ["card", "qr", "cash"];
 
@@ -114,6 +120,152 @@ function normalizeAccounts(
 
   return out;
 }
+
+const sanitizeString = (
+  raw: unknown,
+  field: string,
+  options?: { required?: boolean; min?: number; max?: number }
+): string | undefined => {
+  const required = options?.required ?? true;
+  const min = options?.min ?? 2;
+  const max = options?.max ?? 160;
+
+  if (raw === undefined || raw === null) {
+    if (required) throw new Error(`El campo ${field} es obligatorio`);
+    return undefined;
+  }
+
+  const value = String(raw).trim();
+  if (!value) {
+    if (required) throw new Error(`El campo ${field} es obligatorio`);
+    return undefined;
+  }
+
+  if (value.length < min) throw new Error(`El campo ${field} debe tener al menos ${min} caracteres`);
+  if (value.length > max) throw new Error(`El campo ${field} no puede superar ${max} caracteres`);
+
+  return value;
+};
+
+const sanitizeOptionalString = (
+  raw: unknown,
+  field: string,
+  options?: { min?: number; max?: number }
+): string | undefined => {
+  if (raw === undefined || raw === null) return undefined;
+  const value = String(raw).trim();
+  if (!value) return undefined;
+  return sanitizeString(value, field, { required: false, min: options?.min, max: options?.max });
+};
+
+const parseBooleanField = (raw: unknown, defaultValue = false) => {
+  if (typeof raw === "boolean") return raw;
+  if (typeof raw === "number") return raw === 1;
+  if (typeof raw === "string") {
+    const normalized = raw.trim().toLowerCase();
+    if (!normalized) return defaultValue;
+    return ["true", "1", "si", "sí", "yes"].includes(normalized);
+  }
+  return defaultValue;
+};
+
+const parseDateField = (raw: unknown, field: string): Date => {
+  if (!raw) throw new Error(`El campo ${field} es obligatorio`);
+  const date = new Date(raw as any);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`El campo ${field} debe ser una fecha válida`);
+  }
+  return date;
+};
+
+const buildJobPositionPayload = (body: any): JobPositionPayload => {
+  const positionName = sanitizeString(body?.positionName, "nombre del puesto", { max: 160 })!;
+  const journeyType = sanitizeString(body?.journeyType, "tipo de jornada", { max: 120 })!;
+  const organization = sanitizeOptionalString(body?.organization, "organización", { max: 160 });
+  const isCurrent = parseBooleanField(body?.isCurrent, false);
+
+  const startDate = parseDateField(body?.startDate, "fecha de inicio");
+  const hasEndDate = body?.endDate !== undefined && body?.endDate !== null && String(body?.endDate).trim() !== "";
+  const endDate = hasEndDate ? parseDateField(body?.endDate, "fecha de finalización") : undefined;
+
+  if (!isCurrent && !endDate) {
+    throw new Error("Debe indicar la fecha de finalización si el puesto no está activo");
+  }
+  if (endDate && endDate < startDate) {
+    throw new Error("La fecha de finalización no puede ser anterior a la fecha de inicio");
+  }
+
+  return {
+    positionName,
+    journeyType,
+    organization,
+    isCurrent,
+    startDate,
+    endDate,
+  };
+};
+
+const buildCertificationPayload = (
+  body: any,
+  image?: CertificationImagePayload
+): CertificationPayload => {
+  const name = sanitizeString(body?.name, "nombre de la certificación", { max: 200 })!;
+  const issuer = sanitizeString(body?.issuer, "institución emisora", { max: 200 })!;
+  const issueDate = parseDateField(body?.issueDate, "fecha de expedición");
+  const expirationDate =
+    body?.expirationDate && String(body.expirationDate).trim()
+      ? parseDateField(body?.expirationDate, "fecha de expiración")
+      : undefined;
+
+  if (expirationDate && expirationDate < issueDate) {
+    throw new Error("La fecha de expiración no puede ser anterior a la fecha de expedición");
+  }
+
+  const credentialId = sanitizeOptionalString(body?.credentialId, "ID de la credencial", {
+    max: 120,
+  });
+  const credentialUrl = sanitizeOptionalString(body?.credentialUrl, "URL de la credencial", {
+    max: 512,
+  });
+
+  const payload: CertificationPayload = {
+    name,
+    issuer,
+    issueDate,
+    expirationDate,
+    credentialId,
+    credentialUrl,
+  };
+
+  if (image) {
+    payload.image = image;
+  }
+
+  return payload;
+};
+
+const buildCertificationImagePayload = (
+  file: Express.Multer.File | undefined,
+  required: boolean
+): CertificationImagePayload | undefined => {
+  if (!file) {
+    if (required) {
+      throw new Error("Debes adjuntar la imagen de la certificación");
+    }
+    return undefined;
+  }
+
+  if (!ALLOWED_CERTIFICATION_MIME_TYPES.includes(file.mimetype)) {
+    throw new Error("Formato no permitido. Solo imágenes.");
+  }
+
+  return {
+    data: file.buffer.toString("base64"),
+    mimeType: file.mimetype,
+    size: file.size,
+    originalName: file.originalname,
+  };
+};
 
 export const checkCI = async (req: Request, res: Response) => {
   try {
@@ -327,5 +479,95 @@ export const acceptTerms = async (req: Request, res: Response) => {
     res.json({ success: true, data: updated });
   } catch (err: any) {
     res.status(400).json({ success: false, message: String(err.message || "Error") });
+  }
+};
+
+export const getWorkExperience = async (req: Request, res: Response) => {
+  try {
+    const data = await service.getWorkExperience(req.params.id);
+    if (!data) return res.status(404).json({ success: false, message: "Fixer no encontrado" });
+    res.json({ success: true, data });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: String(err.message || "Error") });
+  }
+};
+
+export const createJobPosition = async (req: Request, res: Response) => {
+  try {
+    const payload = buildJobPositionPayload(req.body);
+    const job = await service.addJobPosition(req.params.id, payload);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Fixer no encontrado" });
+    }
+    res.status(201).json({ success: true, data: job });
+  } catch (err: any) {
+    res.status(400).json({ success: false, message: String(err.message || "Error") });
+  }
+};
+
+export const updateJobPosition = async (req: Request, res: Response) => {
+  try {
+    const payload = buildJobPositionPayload(req.body);
+    const job = await service.updateJobPosition(req.params.id, req.params.jobId, payload);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Fixer o posición no encontrada" });
+    }
+    res.json({ success: true, data: job });
+  } catch (err: any) {
+    res.status(400).json({ success: false, message: String(err.message || "Error") });
+  }
+};
+
+export const deleteJobPosition = async (req: Request, res: Response) => {
+  try {
+    const removed = await service.deleteJobPosition(req.params.id, req.params.jobId);
+    if (!removed) {
+      return res.status(404).json({ success: false, message: "Fixer o posición no encontrada" });
+    }
+    res.json({ success: true, message: "Posición eliminada correctamente" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: String(err.message || "Error") });
+  }
+};
+
+export const createCertification = async (req: Request, res: Response) => {
+  try {
+    const image = buildCertificationImagePayload(req.file as Express.Multer.File | undefined, true)!;
+    const payload = buildCertificationPayload(req.body, image);
+    const cert = await service.addCertification(req.params.id, payload as CertificationPayload & {
+      image: CertificationImagePayload;
+    });
+    if (!cert) {
+      return res.status(404).json({ success: false, message: "Fixer no encontrado" });
+    }
+    res.status(201).json({ success: true, data: cert });
+  } catch (err: any) {
+    res.status(400).json({ success: false, message: String(err.message || "Error") });
+  }
+};
+
+export const updateCertification = async (req: Request, res: Response) => {
+  try {
+    const image = buildCertificationImagePayload(req.file as Express.Multer.File | undefined, false);
+    const payload = buildCertificationPayload(req.body, image);
+    const cert = await service.updateCertification(req.params.id, req.params.certificationId, payload);
+    if (!cert) {
+      return res.status(404).json({ success: false, message: "Fixer o certificación no encontrada" });
+    }
+    res.json({ success: true, data: cert });
+  } catch (err: any) {
+    res.status(400).json({ success: false, message: String(err.message || "Error") });
+  }
+};
+
+export const deleteCertification = async (req: Request, res: Response) => {
+  try {
+    const removed = await service.deleteCertification(req.params.id, req.params.certificationId);
+    if (!removed) {
+      return res.status(404).json({ success: false, message: "Fixer o certificación no encontrada" });
+    }
+    res.json({ success: true, message: "Certificación eliminada correctamente" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: String(err.message || "Error") });
   }
 };
