@@ -83,7 +83,7 @@ import teamsysModule from "./modules/teamsys";
 // RUTAS EXTRA (HEAD)
 // ============================================
 import ubicacionRoutes from "./routes/ubicacion.routes";
-import availabilityRoutes from "./modules/DevCode/routes/availability.routes";
+//import availabilityRoutes from "./modules/DevCode/routes/availability.routes";
 
 // ============================================
 // APP SETUP
@@ -460,7 +460,7 @@ app.use("/api/teamsys", teamsysModule);
 app.use("/api/ubicaciones", ubicacionRoutes);
 
 // Módulo DevCode (HEAD)
-app.use("/api/devcode", availabilityRoutes);
+//app.use("/api/devcode", availabilityRoutes);
 
 // ============================================
 // MANEJO DE ERRORES

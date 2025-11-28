@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from "mongoose";
+import mongoose, { Schema, Document, Types, Model } from "mongoose";
 
 // 1️⃣ Rango horario (intervalo dentro de un día)
 export interface IRangoHorario {
@@ -22,9 +22,9 @@ export interface IHorarioLaboral {
 
 // 4️⃣ Disponibilidad general
 export interface IDisponibilidad {
-  dias: number[]; // 0=Dom, 6=Sáb
-  horaInicio: string; // "08:00"
-  horaFin: string;    // "17:00"
+  dias: number[];        // 0=Dom, 6=Sáb
+  horaInicio: string;    // "08:00"
+  horaFin: string;       // "17:00"
   duracionTurno: number; // en minutos
 }
 
@@ -125,4 +125,12 @@ const fixerSchema = new Schema<IFixer>(
   { timestamps: true } // createdAt y updatedAt automáticos
 );
 
-export const Fixer = model<IFixer>("Fixer", fixerSchema);
+// 🔑 CLAVE: no registrar dos veces el modelo "Fixer"
+const FixerModel: Model<IFixer> =
+  mongoose.models.Fixer || mongoose.model<IFixer>("Fixer", fixerSchema);
+
+// Default export (para `import Fixer from "@models/fixer.model"`)
+export default FixerModel;
+
+// Named export (para `import { Fixer } from "@models/fixer.model"`)
+export { FixerModel as Fixer };
