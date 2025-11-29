@@ -1,14 +1,17 @@
 import { Router } from 'express';
 
-//  IMPORTAMOS EL CONTROLADOR
+// IMPORTAMOS EL CONTROLADOR
 import * as billeteraController from '../controllers/wallet.controller';
 
 const router = Router();
 
-// Ruta dinámica para obtener billetera por nombre de usuario
+// ❌ ANTES (Error):
+// router.get('/:id', billeteraController.handleGetBilleteraByUsuario);
+
+// ✅ AHORA (Correcto):
 router.get(
-  '/:usuario', 
-  billeteraController.handleGetBilleteraByUsuario
+  '/:id', 
+  billeteraController.handleGetBilleteraByFixerId
 );
 
 export default router;

@@ -1,14 +1,14 @@
 import mongoose, { Schema, Document, Types, Model } from "mongoose";
 
-// 1️⃣ Rango horario (intervalo dentro de un día)
+// 1️⃣ Rango horario
 export interface IRangoHorario {
-  inicio: string; // "08:00"
-  fin: string;    // "12:00"
+  inicio: string;
+  fin: string;
 }
 
-// 2️⃣ Día laboral (cada día puede tener varios rangos)
+// 2️⃣ Día laboral
 export interface IDiaLaboral {
-  dia: number; // 1=Lun ... 7=Dom
+  dia: number;
   activo: boolean;
   rangos: IRangoHorario[];
 }
@@ -22,51 +22,65 @@ export interface IHorarioLaboral {
 
 // 4️⃣ Disponibilidad general
 export interface IDisponibilidad {
-  dias: number[];        // 0=Dom, 6=Sáb
-  horaInicio: string;    // "08:00"
-  horaFin: string;       // "17:00"
-  duracionTurno: number; // en minutos
+  dias: number[];
+  horaInicio: string;
+  horaFin: string;
+  duracionTurno: number;
 }
 
+// --- INTERFAZ PRINCIPAL (ADAPTADA A TU DB REAL) ---
 export interface IFixer extends Document {
-  nombre: string;
-  usuario: string;
-  apellido?: string;
-  email: string;
-  hash_password: string;
-  activo: boolean;
-  fecha_registro: Date;
-  telefono?: string;
-  carnet_identidad?: string;
-  metodo_pago?: string;
-  descripcion?: string;
-  categorias?: Types.ObjectId[];
-  especialidades?: Types.ObjectId[];
-  servicios?: Types.ObjectId[];
-  disponibilidad?: IDisponibilidad;
-  horarioLaboral?: IHorarioLaboral;
-  ubicacion?: {
+  // Campos de Identificación
+  fixerId: string;      // ⚠️ Antes "usuario"
+  userId: string;       // Nuevo campo visto en tu DB
+  name: string;         // ⚠️ Antes "nombre"
+  ci?: string;          // ⚠️ Antes "carnet_identidad"
+  email?: string;       // Opcional si no venía en tu json
+  hash_password?: string; // Opcional por si usas auth externa
+  
+  // Datos de Contacto y Perfil
+  whatsapp?: string;    // ⚠️ Antes "telefono"
+  photoUrl?: string;    // Nuevo
+  city?: string;        // Nuevo
+  location?: {          // ⚠️ Antes "ubicacion"
     lat: number;
     lng: number;
-    direccion?: string;
+    address?: string;   // Antes "direccion"
   };
-  rating_promedio?: number;
-  reseñas_recibidas?: number;
+  
+  // Listas (Arrays)
+  categories?: any[];    // ⚠️ Antes "categorias"
+  skills?: any[];        // ⚠️ Antes "especialidades"
+  paymentMethods?: any[];// ⚠️ Antes "metodo_pago"
+
+  // Metadatos
+  active?: boolean;      // ⚠️ Antes "activo"
+  memberSince?: Date;    // ⚠️ Antes "fecha_registro"
+  termsAccepted?: boolean;
+  
+  // Estadísticas
+  jobsCount?: number;
+  ratingAvg?: number;    // ⚠️ Antes "rating_promedio"
+  ratingCount?: number;  // ⚠️ Antes "reseñas_recibidas"
+
+  // Sub-documentos (Mantenemos tu lógica anterior por si la usas a futuro)
+  disponibilidad?: IDisponibilidad;
+  horarioLaboral?: IHorarioLaboral;
+
   createdAt?: Date;
   updatedAt?: Date;
 }
 
+// --- SCHEMAS ---
+
 const rangoHorarioSchema = new Schema<IRangoHorario>(
-  {
-    inicio: { type: String, required: true },
-    fin: { type: String, required: true },
-  },
+  { inicio: { type: String }, fin: { type: String } },
   { _id: false }
 );
 
 const diaLaboralSchema = new Schema<IDiaLaboral>(
   {
-    dia: { type: Number, required: true },
+    dia: { type: Number },
     activo: { type: Boolean, default: true },
     rangos: [rangoHorarioSchema],
   },
@@ -75,7 +89,7 @@ const diaLaboralSchema = new Schema<IDiaLaboral>(
 
 const horarioLaboralSchema = new Schema<IHorarioLaboral>(
   {
-    modo: { type: String, enum: ["diaria", "semanal"], required: true },
+    modo: { type: String, enum: ["diaria", "semanal"] },
     dias: [diaLaboralSchema],
     updatedAt: { type: Date, default: Date.now },
   },
@@ -84,53 +98,65 @@ const horarioLaboralSchema = new Schema<IHorarioLaboral>(
 
 const disponibilidadSchema = new Schema<IDisponibilidad>(
   {
-    dias: [{ type: Number, required: true }],
-    horaInicio: { type: String, required: true },
-    horaFin: { type: String, required: true },
-    duracionTurno: { type: Number, required: true },
+    dias: [{ type: Number }],
+    horaInicio: { type: String },
+    horaFin: { type: String },
+    duracionTurno: { type: Number },
   },
   { _id: false }
 );
 
+// --- SCHEMA PRINCIPAL FIXER ---
 const fixerSchema = new Schema<IFixer>(
   {
-    nombre: { type: String, required: true },
-    usuario: { type: String, required: true, unique: true },
-    apellido: { type: String },
-    email: { type: String, required: true, unique: true },
-    hash_password: { type: String, required: true },
-    activo: { type: Boolean, default: true },
-    fecha_registro: { type: Date, default: Date.now },
-    telefono: { type: String },
-    carnet_identidad: { type: String },
-    metodo_pago: { type: String },
-    descripcion: { type: String },
+    // Identificadores
+    fixerId: { type: String, required: true, unique: true },
+    userId: { type: String, required: true },
+    name: { type: String, required: true },
+    ci: { type: String },
+    email: { type: String },
+    hash_password: { type: String },
 
-    categorias: [{ type: Schema.Types.ObjectId, ref: "Categoria" }],
-    especialidades: [{ type: Schema.Types.ObjectId, ref: "Especialidad" }],
-    servicios: [{ type: Schema.Types.ObjectId, ref: "Servicio" }],
-
-    disponibilidad: disponibilidadSchema,
-    horarioLaboral: horarioLaboralSchema,
-
-    ubicacion: {
+    // Contacto
+    whatsapp: { type: String }, // IMPORTANTE: Este campo es el que usamos para notificaciones
+    photoUrl: { type: String },
+    city: { type: String },
+    
+    // Ubicación (Mapeado a 'location' en la DB)
+    location: {
       lat: Number,
       lng: Number,
-      direccion: String,
+      address: String,
     },
 
-    rating_promedio: { type: Number, default: 0 },
-    reseñas_recibidas: { type: Number, default: 0 },
+    // Arrays (Usamos Mixed o ObjectId según lo que guardes realmente)
+    categories: [{ type: Schema.Types.Mixed }], 
+    skills: [{ type: Schema.Types.Mixed }],
+    paymentMethods: [{ type: Schema.Types.Mixed }],
+
+    // Estado
+    active: { type: Boolean, default: true },
+    memberSince: { type: Date, default: Date.now },
+    termsAccepted: { type: Boolean, default: false },
+
+    // Estadísticas
+    jobsCount: { type: Number, default: 0 },
+    ratingAvg: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
+
+    // Lógica de Negocio Extra
+    disponibilidad: disponibilidadSchema,
+    horarioLaboral: horarioLaboralSchema,
   },
-  { timestamps: true } // createdAt y updatedAt automáticos
+  { 
+    timestamps: true, // Maneja createdAt y updatedAt automáticamente
+    collection: 'fixers', // Forzamos el nombre de la colección tal cual está en Mongo
+    strict: false // 💡 TRUCO: Permite guardar campos extra que no estén en el esquema si la DB cambia
+  } 
 );
 
-// 🔑 CLAVE: no registrar dos veces el modelo "Fixer"
-const FixerModel: Model<IFixer> =
-  mongoose.models.Fixer || mongoose.model<IFixer>("Fixer", fixerSchema);
+// Evitar recompilación del modelo en Next.js/Hot Reload
+const FixerModel: Model<IFixer> = mongoose.models.Fixer || mongoose.model<IFixer>("Fixer", fixerSchema);
 
-// Default export (para `import Fixer from "@models/fixer.model"`)
 export default FixerModel;
-
-// Named export (para `import { Fixer } from "@models/fixer.model"`)
 export { FixerModel as Fixer };

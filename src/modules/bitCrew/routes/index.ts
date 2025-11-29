@@ -9,7 +9,7 @@ import recargaRoutes from './recarga.routes'; // <--- ruta para recargaQR
 
 const router = Router();
 
-router.use("/billetera", billeteraRoutes);
+router.use("/wallet", billeteraRoutes);
 router.use("/fixers", fixerRoutes);
 router.use("/trabajos", trabajoRoutes);
 router.use("/historial", transaccionRoutes);

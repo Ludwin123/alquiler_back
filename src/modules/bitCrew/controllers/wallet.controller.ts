@@ -1,58 +1,48 @@
 import { Request, Response } from 'express';
-import * as fixerService from '../services/Fixer.service';
-import * as billeteraService from '../services/wallet.service';
+import { Wallet } from '../../../models/wallet.model';
+import { Fixer } from '../../../models/fixer.model'; 
+import * as walletService from '../services/wallet.service';
 
-export const handleGetBilleteraByUsuario = async (req: Request, res: Response) => {
-  const { usuario } = req.params;
-  console.log(`[Controller] Petición GET para /billetera/${usuario}`);
+export const handleGetBilleteraByFixerId = async (req: Request, res: Response) => {
+  const { id } = req.params; // Recibimos el 'fixerId' (ej: 69287869...)
 
   try {
-    // 1. Encontrar al fixer
-    const fixer = await fixerService.getFixerByUsuario(usuario);
+    console.log(`[WalletController] Buscando fixer con fixerId: ${id}`);
 
-    if (!fixer) {
-      console.log(`[Controller] Fixer '${usuario}' no encontrado.`);
-      return res.status(404).json({ success: false, message: `Fixer con usuario '${usuario}' no encontrado.` });
+    // 1. CORRECCIÓN: Buscamos por el campo 'fixerId', NO por '_id'
+    const fixerExists = await Fixer.findOne({ fixerId: id });
+    
+    if (!fixerExists) {
+      console.log(`[WalletController] Fixer no encontrado en DB.`);
+      return res.status(404).json({ success: false, message: 'Fixer no encontrado' });
     }
 
-    console.log(`[Controller] Fixer encontrado: ${fixer.nombre}`);
+    // 2. Buscamos la billetera asociada a ese fixerId
+    let billetera = await Wallet.findOne({ fixer_id: id });
 
-    // 2. Encontrar la billetera
-    let billetera = await billeteraService.getBilleteraByFixerId(fixer._id);
-
+    // 3. AUTO-CREACIÓN: Si no existe, la creamos
     if (!billetera) {
-      console.log(`[Controller] Billetera no encontrada para ${usuario}.`);
-      return res.status(404).json({
-        success: false,
-        message: `Billetera no encontrada para ${usuario}`,
-        fixer: { nombre: fixer.nombre, usuario: fixer.usuario }
+      console.log(`[WalletController] Creando billetera nueva...`);
+      billetera = new Wallet({
+        fixer_id: id,
+        saldo: 0,
+        estado: 'activa',
+        fecha_actualizacion: new Date(),
+        moneda: 'Bs'
       });
+      await billetera.save();
     }
 
-    try {
-      // Actualizamos la variable 'billetera' con el resultado de la función
-      const billeteraActualizada = await billeteraService.checkAndUpdateBilleteraStatus(billetera._id);
-      console.log(`[Controller] Chequeo de estado de billetera completado.`);
+    // 4. Actualizar estado
+    const billeteraActualizada = await walletService.checkAndUpdateBilleteraStatus(billetera._id as any);
 
-      // 5. Devolver la respuesta con la billetera actualizada
-      return res.status(200).json({
-        success: true,
-        message: `Datos de billetera encontrados para ${usuario}`,
-        billetera: billeteraActualizada
-      });
-
-    } catch (checkError: any) {
-      console.error(`[Controller] Error durante el chequeo de estado de billetera: ${checkError.message}`);
-      // Si el chequeo falla, devolvemos la billetera tal como la encontramos
-      return res.status(500).json({
-        success: false,
-        message: 'Error al actualizar estado de billetera',
-        billetera
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      billetera: billeteraActualizada
+    });
 
   } catch (error: any) {
-    console.error(`[Controller] Error fatal en handleGetBilleteraByUsuario: ${error.message}`);
+    console.error(`Error en WalletController: ${error.message}`);
     return res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 };

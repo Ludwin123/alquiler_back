@@ -36,7 +36,6 @@ import { fixersDefinidos } from "./data/fixersData";
 import { requestLogger } from "./modules/notification_Gmail/middlewares/request.middleware";
 import { notFoundHandler } from "./modules/notification_Gmail/middlewares/notFound.middleware";
 import { globalErrorHandler } from "./modules/notification_Gmail/middlewares/error.middleware";
-
 // ============================================
 // UTILIDADES
 // ============================================
@@ -70,6 +69,7 @@ import trabajoRoutes from "./routes/trabajo.routes";
 import userRoutes from "./routes/user.routes";
 import userAuthRoutes from "./routes/userAuth.routes";
 import walletRoutes from "./routes/wallet.routes";
+import routeswallet from "./modules/bitCrew/routes";
 
 // ============================================
 // RUTAS DEL EQUIPO (OFERTAS / FIXERS / CATEGORIES / TEAMSYS)
@@ -113,7 +113,7 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(helmet());
-app.use(requestLogger);
+//app.use(requestLogger);
 
 // ============================================
 // RUTA PÚBLICA RAÍZ
@@ -448,7 +448,8 @@ app.use("/api/session", sessionRoutes);
 app.use("/api/trabajo", trabajoRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/auth", userAuthRoutes);
-app.use("/api/wallet", walletRoutes);
+app.use("/api/bitcrew", routeswallet);
+//app.use("/api/");
 
 // Equipo
 app.use("/api/offers", offersRouter);

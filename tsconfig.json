@@ -31,10 +31,10 @@
       "@/*": ["*"],
       "@config/*": ["config/*"],
       "@modules/*": ["modules/*"],
-      "@routes/*": ["modules/*/**/routes/*"],
-      "@controllers/*": ["modules/*/**/controllers/*"],
-      "@services/*": ["modules/*/**/services/*"],
-      "@models/*": ["modules/*/**/models/*", "models/*"],
+      "@routes/*": ["modules/*"],
+      "@controllers/*": ["modules/*"],
+      "@services/*": ["modules/*"],
+      "@models/*": ["modules/*", "models/*"],
       "@utils/*": ["utils/*"]
     },
 
