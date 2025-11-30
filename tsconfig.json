@@ -20,15 +20,6 @@
     "paths": {
       "@/*": [
         "*"
-      ],
-      "@controllers/*": [
-        "modules/*/controllers/*"
-      ],
-      "@services/*": [
-        "modules/*/services/*"
-      ],
-      "@models/*": [
-        "modules/*/models/*"
       ]
     },
     "noImplicitAny": false,
