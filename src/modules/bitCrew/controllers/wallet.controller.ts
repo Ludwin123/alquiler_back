@@ -1,41 +1,25 @@
 import { Request, Response } from 'express';
-import { Wallet } from '../../../models/wallet.model';
-import { Fixer } from '../../../models/fixer.model'; 
 import * as walletService from '../services/wallet.service';
+import { Types } from 'mongoose';
 
 export const handleGetBilleteraByFixerId = async (req: Request, res: Response) => {
-  const { id } = req.params; // Recibimos el 'fixerId' (ej: 69287869...)
+  const { id } = req.params; // Este es el ID del Fixer
 
   try {
-    console.log(`[WalletController] Buscando fixer con fixerId: ${id}`);
-
-    // 1. CORRECCIÓN: Buscamos por el campo 'fixerId', NO por '_id'
-    const fixerExists = await Fixer.findOne({ fixerId: id });
-    
-    if (!fixerExists) {
-      console.log(`[WalletController] Fixer no encontrado en DB.`);
-      return res.status(404).json({ success: false, message: 'Fixer no encontrado' });
+    if (!Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: 'ID de Fixer no válido' });
     }
 
-    // 2. Buscamos la billetera asociada a ese fixerId
-    let billetera = await Wallet.findOne({ fixer_id: id });
+    console.log(`[WalletController] Procesando billetera para Fixer ID: ${id}`);
 
-    // 3. AUTO-CREACIÓN: Si no existe, la creamos
-    if (!billetera) {
-      console.log(`[WalletController] Creando billetera nueva...`);
-      billetera = new Wallet({
-        fixer_id: id,
-        saldo: 0,
-        estado: 'activa',
-        fecha_actualizacion: new Date(),
-        moneda: 'Bs'
-      });
-      await billetera.save();
-    }
+    // 1. Llamamos al servicio que busca o crea la billetera
+    const billetera = await walletService.getOrCreateWallet(id);
 
-    // 4. Actualizar estado
-    const billeteraActualizada = await walletService.checkAndUpdateBilleteraStatus(billetera._id as any);
+    // 2. (Opcional) Verificamos estado actual. 
+    // Nota: Si acabamos de crearla con 0, verifica si tu lógica la bloquea.
+    const billeteraActualizada = await walletService.checkAndUpdateBilleteraStatus(billetera._id as Types.ObjectId);
 
+    // 3. Respondemos al frontend
     return res.status(200).json({
       success: true,
       billetera: billeteraActualizada
@@ -43,6 +27,11 @@ export const handleGetBilleteraByFixerId = async (req: Request, res: Response) =
 
   } catch (error: any) {
     console.error(`Error en WalletController: ${error.message}`);
-    return res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    
+    if (error.message.includes("El Fixer no existe")) {
+        return res.status(404).json({ success: false, message: error.message });
+    }
+
+    return res.status(500).json({ success: false, message: 'Error interno del servidor al obtener la billetera' });
   }
 };

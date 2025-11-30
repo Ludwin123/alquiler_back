@@ -150,7 +150,7 @@ const fixerSchema = new Schema<IFixer>(
   },
   { 
     timestamps: true, // Maneja createdAt y updatedAt automáticamente
-    collection: 'fixers', // Forzamos el nombre de la colección tal cual está en Mongo
+    collection: 'fixer_profiles', // Forzamos el nombre de la colección tal cual está en Mongo
     strict: false // 💡 TRUCO: Permite guardar campos extra que no estén en el esquema si la DB cambia
   } 
 );

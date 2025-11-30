@@ -10,7 +10,7 @@ const router = Router();
 
 // ✅ AHORA (Correcto):
 router.get(
-  '/:id', 
+  '/fixer/:id', 
   billeteraController.handleGetBilleteraByFixerId
 );
 
