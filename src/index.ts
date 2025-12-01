@@ -20,7 +20,6 @@ import busquedaRouter from './modules/borbotones/routes/busqueda.router';
 import filtrosRouter from './modules/borbotones/routes/filtros.routes';
 import busquedaAvanzadaRouter from './modules/borbotones/routes/busquedaAvanzada.router';
 
-
 // ============================================
 // 🔹 Cargar variables de entorno
 // ============================================
@@ -69,7 +68,6 @@ app.use('/api/borbotones', ordenamientoRouter);
 // Módulo de búsqueda
 app.use('/api/borbotones/search', busquedaRouter);
 
-
 app.use('/api/borbotones/filtros', filtrosRouter);
 
 // Rutas de búsqueda avanzada
@@ -79,7 +77,7 @@ app.use("/api/borbotones/search/avanzada", busquedaAvanzadaRouter);
 // 🩺 Endpoint de salud (para monitoreo)
 // ============================================
 app.get('/api/health', (_req: Request, res: Response) => {
-  const state = mongoose.connection.readyState; // 0 disconnected, 1 connected, 2 connecting, 3 disconnecting
+  const state = mongoose.connection.readyState;
   const stateMap: Record<number, string> = {
     0: 'disconnected',
     1: 'connected',
@@ -110,11 +108,13 @@ app.use((req: Request, res: Response) => {
 // ============================================
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en puerto ${PORT}`);
-  console.log(`🌐 URL: http://localhost:${PORT}`);
-  console.log(`⚙️  Modo: ${process.env.NODE_ENV || 'development'}`);
-});
+// Solo iniciar el servidor si no estamos en Vercel
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`✅ Servidor corriendo en puerto ${PORT}`);
+    console.log(`🌐 URL: http://localhost:${PORT}`);
+    console.log(`⚙️  Modo: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
 
 export default app;
-
