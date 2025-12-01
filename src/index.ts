@@ -108,13 +108,11 @@ app.use((req: Request, res: Response) => {
 // ============================================
 const PORT = process.env.PORT || 5000;
 
-// Solo iniciar el servidor si no estamos en Vercel
-if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
-    console.log(`✅ Servidor corriendo en puerto ${PORT}`);
-    console.log(`🌐 URL: http://localhost:${PORT}`);
-    console.log(`⚙️  Modo: ${process.env.NODE_ENV || 'development'}`);
-  });
-}
+// INICIAR SIEMPRE EL SERVIDOR (eliminar la condición que bloqueaba Vercel)
+app.listen(PORT, () => {
+  console.log(`✅ Servidor corriendo en puerto ${PORT}`);
+  console.log(`🌐 URL: http://localhost:${PORT}`);
+  console.log(`⚙️  Modo: ${process.env.NODE_ENV || 'development'}`);
+});
 
 export default app;
