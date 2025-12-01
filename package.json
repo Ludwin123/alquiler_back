@@ -1,17 +1,12 @@
 {
   "name": "alquiler_back",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
+  "main": "src/index.ts",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "start:dev": "npm run build && npm start",
-    "test": "jest --runInBand",
-    "test:watch": "jest --watch",
-    "test:ci": "jest --ci --reporters=default --reporters=jest-junit",
-    "clean": "rimraf dist"
+    "vercel-build": "npm run build && npm start"
   },
   "repository": {
     "type": "git",
